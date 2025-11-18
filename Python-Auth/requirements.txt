@@ -1,0 +1,20 @@
+# --- Framework principal ---
+fastapi
+uvicorn[standard]
+
+# --- Validación y modelos ---
+pydantic
+pydantic-settings
+
+# --- ORM y base de datos ---
+sqlmodel
+psycopg2-binary
+
+# --- Utilidades ---
+python-dotenv # Cargar variables desde .env
+
+# --- Crear y verificar los tokens JWT ---
+python-jose
+
+# --- Hashear (cifrar) las contraseñas ---
+passlib

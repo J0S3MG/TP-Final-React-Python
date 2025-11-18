@@ -1,8 +1,10 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../Contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import {  Box, TextField, Button, Paper, Typography,CircularProgress, Alert, Container } from '@mui/material';
-import { Login as LoginIcon,  Security as SecurityIcon } from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
+import { Box, TextField, Button, CircularProgress, Alert, Typography } from '@mui/material';
+import { Login as LoginIcon, Security as SecurityIcon } from '@mui/icons-material';
+import AuthFormLayout from '../Components/AuthFormLayout';
+import AuthHeader from '../Components/AuthHeader';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -10,7 +12,6 @@ function LoginPage() {
   const { login, loading, error, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  // Redireccion si ya esta autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
@@ -26,104 +27,95 @@ function LoginPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0a 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: '-50%',
-          left: '-50%',
-          width: '200%',
-          height: '200%',
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #8A2BE2 2px, #8A2BE2 4px)',
-          opacity: 0.03,
-          animation: 'scan 8s linear infinite',
-        },
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper
-          elevation={24}
+    <AuthFormLayout>
+      <AuthHeader
+        icon={SecurityIcon}
+        title="INICIO DE SESIÓN"
+        subtitle={{ text: 'Prueba de Autenticación', color: '#8A2BE2' }}
+        iconColor="#00FFFF"
+      />
+
+      {error && (
+        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+          ERROR: {error}
+        </Alert>
+      )}
+
+      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="EMAIL"
+          name="email"
+          autoComplete="email"
+          autoFocus
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
+        />
+
+        <TextField
+          margin="normal"
+          required
+          fullWidth
+          name="password"
+          label="CONTRASEÑA"
+          type="password"
+          id="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={loading}
+        />
+
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          sx={{ mt: 3, mb: 2, py: 1.5 }}
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
+        >
+          {loading ? 'CONECTANDO...' : ' INICIAR SESION'}
+        </Button>
+
+        <Box sx={{ textAlign: 'center', mt: 2 }}>
+          <Typography variant="body1" sx={{ color: '#d806ebff', mb: 1,fontSize: '1.2rem' }}>
+            ¿No tienes cuenta?
+          </Typography>
+          <Button
+            component={Link}
+            to="/register"
+            variant="outlined"
+            color="secondary"
+            fullWidth
+            disabled={loading}
+          >
+            REGISTRAR CUENTA
+          </Button>
+        </Box>
+
+        <Typography
+          variant="caption"
           sx={{
-            p: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            display: 'block',
+            textAlign: 'center',
+            color: '#fff8f8ff',
+            mt: 3,
+            fontSize: '1rem',
           }}
         >
-          <SecurityIcon sx={{ fontSize: 60, color: '#00FFFF', mb: 2, filter: 'drop-shadow(0 0 10px #00FFFF)' }} />
-          
-          <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#00FFFF', textShadow: '0 0 10px #00FFFF' }}>
-            // RETRO_AUTH
-          </Typography>
-          
-          <Typography variant="body2" sx={{ mb: 3, color: '#8A2BE2' }}>
-            &gt; Inicializar sesión_
-          </Typography>
-
-          {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2, border: '1px solid #FF00FF' }}>
-              ERROR: {error}
-            </Alert>
-          )}
-
-          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="// EMAIL_ADDRESS"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-            
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="// PASSWORD_KEY"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5 }}
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <LoginIcon />}
-            >
-              {loading ? 'CONECTANDO...' : '> INICIAR_SESION'}
-            </Button>
-
-            <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', color: '#666', mt: 2 }}>
-              🎮 CREDENCIALES DE PRUEBA:<br />
-              Email: gamer@retro.com<br />
-              Password: neon1234
-            </Typography>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+          🎮 CREDENCIALES DE PRUEBA:
+          <br />
+          Email: gamer@retro.com
+          <br />
+          Password: Neo123
+        </Typography>
+      </Box>
+    </AuthFormLayout>
   );
-};
+}
 
 export default LoginPage;

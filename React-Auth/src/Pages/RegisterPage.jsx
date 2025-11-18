@@ -1,15 +1,31 @@
-import  { useState, useEffect } from 'react';
-import {  useNavigate} from 'react-router-dom';
-import { Box, TextField, Button, Paper, Typography, CircularProgress, Alert, Container} from '@mui/material';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../Contexts/AuthContext';
+import AuthHeader from '../Components/AuthHeader';
+import AuthFormLayout from '../Components/AuthFormLayout';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Box,
+  TextField,
+  Button,
+  Paper,
+  Typography,
+  CircularProgress,
+  Alert,
+  Container,
+} from '@mui/material';
+import {
+  PersonAdd as PersonAddIcon,
+  AppRegistration as AppRegistrationIcon,
+} from '@mui/icons-material';
 
-
-const RegisterPage = () => {
+function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const { register, loading, error, isAuthenticated } = useAuth();
+  const { registerUser, loading, error, isAuthenticated } = useAuth(); // CAMBIADO: register -> registerUser
   const navigate = useNavigate();
 
+  // Redirección si ya está autenticado
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/dashboard');
@@ -18,53 +34,23 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await register(email, password, confirmPassword);
+    const result = await registerUser(email, password, confirmPassword); // CAMBIADO: register -> registerUser
     if (result.success) {
       navigate('/dashboard');
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'radial-gradient(ellipse at center, #1a0a2e 0%, #0a0a0a 100%)',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: '-50%',
-          left: '-50%',
-          width: '200%',
-          height: '200%',
-          background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, #8A2BE2 2px, #8A2BE2 4px)',
-          opacity: 0.03,
-          animation: 'scan 8s linear infinite',
-        },
-        '@keyframes scan': {
-          '0%': { transform: 'translateY(0)' },
-          '100%': { transform: 'translateY(50%)' },
-        },
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper elevation={24} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <PersonAddIcon sx={{ fontSize: 60, color: '#AB00FF', mb: 2, filter: 'drop-shadow(0 0 10px #AB00FF)' }} />
-          
-          <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#AB00FF', textShadow: '0 0 10px #AB00FF' }}>
-            // NEW_USER
-          </Typography>
-          
-          <Typography variant="body2" sx={{ mb: 3, color: '#00FFFF' }}>
-            &gt; Crear nueva cuenta_
-          </Typography>
+    <AuthFormLayout>
+          <AuthHeader
+                  icon={AppRegistrationIcon}
+                  title="Registrar Cuenta"
+                  subtitle={{ text: 'Nueva Cuenta', color: '#8A2BE2' }}
+                  iconColor="#00FFFF"
+                />
 
           {error && (
-            <Alert severity="error" sx={{ width: '100%', mb: 2, border: '1px solid #FF00FF' }}>
+            <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
               ERROR: {error}
             </Alert>
           )}
@@ -75,7 +61,7 @@ const RegisterPage = () => {
               required
               fullWidth
               id="email"
-              label="// EMAIL_ADDRESS"
+              label="EMAIL"
               name="email"
               autoComplete="email"
               autoFocus
@@ -83,13 +69,13 @@ const RegisterPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
             />
-            
+
             <TextField
               margin="normal"
               required
               fullWidth
               name="password"
-              label="// PASSWORD_KEY"
+              label="CONTRASEÑA"
               type="password"
               id="password"
               autoComplete="new-password"
@@ -103,7 +89,7 @@ const RegisterPage = () => {
               required
               fullWidth
               name="confirmPassword"
-              label="// CONFIRM_PASSWORD"
+              label="CONFIRAMR CONTRASEÑA"
               type="password"
               id="confirmPassword"
               autoComplete="new-password"
@@ -118,29 +104,31 @@ const RegisterPage = () => {
               variant="contained"
               sx={{ mt: 3, mb: 2, py: 1.5 }}
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} /> : <PersonAddIcon />}
+              startIcon={
+                loading ? <CircularProgress size={20} /> : <PersonAddIcon />
+              }
             >
-              {loading ? 'REGISTRANDO...' : '> CREAR_CUENTA'}
+              {loading ? 'REGISTRANDO...' : ' CREAR CUENTA'}
             </Button>
 
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" sx={{ color: '#666', mb: 1 }}>
+              <Typography variant="body1" sx={{ color: '#dbdadaff', mb: 1 }}>
                 ¿Ya tienes cuenta?
               </Typography>
               <Button
+                component={Link}
+                to="/login"
                 variant="outlined"
                 color="secondary"
-                onClick={() => navigate('/login')}
+                fullWidth
                 disabled={loading}
               >
-                INICIAR_SESION
+                INICIAR SESION
               </Button>
             </Box>
           </Box>
-        </Paper>
-      </Container>
-    </Box>
+    </AuthFormLayout>
   );
-};
+}
 
 export default RegisterPage;

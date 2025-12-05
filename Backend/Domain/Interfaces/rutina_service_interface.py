@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import Optional, List
 from Domain.Entities.rutina import Rutina
-from Application.DTOs.rutina_dto import RutinaConEjerciciosCreate
+from Application.DTOs.rutina_dto import RutinaConEjerciciosCreate, RutinaModificarRequest
 
 class RutinaServiceInterface(ABC):
     """
@@ -13,7 +14,7 @@ class RutinaServiceInterface(ABC):
         pass
     
     @abstractmethod
-    def listar_rutinas(self, page: int, size: int) -> List[Rutina]:
+    def listar_rutinas(self, skip: int, limit: int) -> List[Rutina]:
         """Lista las rutinas con paginación, devolviendo Entidades de Dominio."""
         pass
 
@@ -25,5 +26,15 @@ class RutinaServiceInterface(ABC):
     @abstractmethod
     def buscar_por_nombre(self, nombre: str) -> Optional[Rutina]:
         """Busca una rutina por su nombre para la validación de unicidad."""
+        pass
+
+    @abstractmethod
+    def modificar_rutina(self, rutina_id: int, data: RutinaModificarRequest) -> Rutina:
+        """Modifica la rutina base y sus ejercicios asociados (agregar/editar/eliminar)."""
+        pass
+
+    @abstractmethod
+    def dar_baja_rutina(self, rutina_id: int):
+        """Elimina el Agregado Rutina completo por ID."""
         pass
     

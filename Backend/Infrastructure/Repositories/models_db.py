@@ -29,8 +29,11 @@ class RutinaDB(SQLModel, table=True):
     nombre: str 
     descripcion: Optional[str] = None 
     fecha_creacion: datetime = Field(default_factory=datetime.now)
-    
-    ejercicios: List[EjercicioDB] = Relationship(back_populates="rutina")
+    ejercicios: List["EjercicioDB"] = Relationship(
+        back_populates="rutina", 
+        # Envolvemos el argumento 'cascade' dentro de sa_relationship_kwargs
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"} 
+    )
     
 # Nota: La lógica de mapeo (transformar RutinaDB a Rutina de Dominio y viceversa)
 # se haría dentro de las clases de Repositorio en Infrastructure/Repository.

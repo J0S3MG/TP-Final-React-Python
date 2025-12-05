@@ -4,22 +4,28 @@ from typing import Optional, List
 from datetime import datetime
 # Importamos los DTOs de Ejercicio aquí (abajo) para la respuesta
 
-# DTOs de Solicitud (Request)
-class RutinaCreate(SQLModel):
+
+class RutinaConEjerciciosCreate(SQLModel):
     """DTO para crear una Rutina"""
     nombre: str = Field(..., max_length=100)
     descripcion: Optional[str] = Field(None, max_length=500)
-
-
-class RutinaConEjerciciosCreate(SQLModel):
-    rutina: RutinaCreate
     ejercicios: List["EjercicioCreate"] # Referencia a DTOs
 
 
-class RutinaUpdate(BaseModel):
-    """DTO para actualizar la Rutina"""
+class RutinaModificarRequest(SQLModel):
+    """
+    DTO completo para la Modificación de Rutina y sus ejercicios asociados.
+    """
     nombre: Optional[str] = Field(None, max_length=100)
     descripcion: Optional[str] = Field(None, max_length=500)
+    # 1. Ejercicios a MODIFICAR o CREAR (si id es None)
+    ejercicios_a_modificar_o_crear: List["EjercicioUpdate"]
+    
+    # IDs de Ejercicios a ELIMINAR
+    ids_ejercicios_a_eliminar: List[int] = Field(
+        default=[],
+        description="Lista de IDs de ejercicios existentes que deben ser eliminados."
+    )
 
 # DTOs de Respuesta (Response)
 class RutinaResponse(SQLModel):
@@ -31,25 +37,7 @@ class RutinaResponse(SQLModel):
     ejercicios: List["EjercicioResponse"] = [] # Referencia a DTOs
     
 
-# 1. DTO para un grupo de ejercicios por día (Sub-Response)
-class EjerciciosPorDiaResponse(SQLModel):
-    """Modelo para respuesta de ejercicios agrupados por día de la semana"""
-    dia: DiaSemana
-    ejercicios: List["EjercicioResponse"] # Asume EjercicioResponse está definido/importado
-
-
-# 2. DTO de Detalle (Respuesta Completa)
-class RutinaConEjerciciosPorDiaResponse(RutinaResponse):
-    """
-    Modelo para respuesta de rutina con ejercicios organizados por día.
-    Hereda de RutinaResponse (ID, nombre, descripción, fecha_creacion).
-    """
-    # Sobrescribe el campo 'ejercicios' para usar la agrupación por día
-    ejercicios: List["EjercicioResponse"] = [] # Mantener por consistencia o eliminar
-    ejercicios_por_dia: List[EjerciciosPorDiaResponse] = []
-
-
 # Importaciones y refs para resolver dependencia circular
-from Application.DTOs.ejercicio_dto import EjercicioResponse, EjercicioCreate
+from Application.DTOs.ejercicio_dto import EjercicioResponse, EjercicioCreate, EjercicioUpdate
 RutinaResponse.update_forward_refs()
 RutinaConEjerciciosCreate.update_forward_refs()

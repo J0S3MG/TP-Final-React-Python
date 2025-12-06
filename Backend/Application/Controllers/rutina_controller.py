@@ -9,10 +9,10 @@ from Application.DTOs.rutina_dto import RutinaConEjerciciosCreate, RutinaRespons
 from Application.Exceptions.rutina_exception import RutinaAlreadyExistsError, RutinaNotFoundError
 from Infrastructure.deps import get_rutina_service
 
-router = APIRouter(prefix="/rutinas", tags=["Rutinas"])
+router = APIRouter(prefix="/api", tags=["Rutinas"])
 
 # ------------------------------------ ALTA RUTINAS ------------------------------------------------------------
-@router.post(" ", response_model=RutinaResponse, status_code=status.HTTP_201_CREATED, summary="Da de Alta una Rutina", operation_id="Alta_Rutina")
+@router.post("/rutinas", response_model=RutinaResponse, status_code=status.HTTP_201_CREATED, summary="Dar de Alta una Rutina", operation_id="Alta_Rutina")
 def alta_rutina( data: RutinaConEjerciciosCreate,
     servicio: RutinaServiceInterface = Depends(get_rutina_service)) -> RutinaResponse:
     try:
@@ -36,7 +36,7 @@ def alta_rutina( data: RutinaConEjerciciosCreate,
 
 
 # ------------------------------------ LISTAR RUTINAS ----------------------------------------------------------
-@router.get( " ", response_model=List[RutinaResponse], summary="Lista todas las rutinas con paginación", operation_id="Listar_Rutina" )
+@router.get( "/rutinas", response_model=List[RutinaResponse], summary="Lista todas las rutinas con paginación", operation_id="Listar_Rutina" )
 def listar_rutinas( skip: int = Query(0, ge=0, description="Número de autos a saltar"),
     limit: int = Query(100, ge=1, le=1000, description="Número de autos a devolver"),
     servicio: RutinaServiceInterface = Depends(get_rutina_service)) -> List[RutinaResponse]:
@@ -48,8 +48,23 @@ def listar_rutinas( skip: int = Query(0, ge=0, description="Número de autos a s
 # --------------------------------------------------------------------------------------------------------------
 
 
+# ------------------------------------ BUSQUEDA PARCIAL POR NOMBRE ---------------------------------------------
+@router.get("/rutinas/buscar", response_model=List[RutinaResponse],summary="Busca rutinas por coincidencia parcial en el nombre", operation_id="Busqueda_Parcial")
+def search_rutinas(nombre: str = Query(..., min_length=1, description="Término de búsqueda parcial (ej: 'cardio')"),
+    servicio: RutinaServiceInterface = Depends(get_rutina_service)):
+    """
+    Endpoint que responde a: GET /api/rutinas/buscar?nombre={texto}
+    """
+    # Llamada al Caso de Uso/Servicio de Aplicación
+    # Usamos el servicio existente, el cual recibe el término y devuelve las Entidades.
+    rutinas_domain = servicio.buscar_rutinas_por_nombre(nombre) # <-- Usamos el parámetro 'nombre'
+    rutinas_resumen_dto = [RutinaResponse.model_validate(r) for r in rutinas_domain]
+    return rutinas_resumen_dto
+# --------------------------------------------------------------------------------------------------------------
+
+
 # ------------------------------------ BUSCAR RUTINA POR ID ----------------------------------------------------
-@router.get("/{rutina_id}", response_model=RutinaResponse, summary="Obtiene el detalle completo de una rutina agrupado por día", operation_id="Rutina_por_dia")
+@router.get("/rutinas/{rutina_id}", response_model=RutinaResponse, summary="Obtiene el detalle completo de una rutina agrupado por día", operation_id="Rutina_por_dia")
 def obtener_detalle_rutina( rutina_id: int, servicio: RutinaServiceInterface = Depends(get_rutina_service)):
     try:
         rutina_domain = servicio.obtener_detalle_rutina(rutina_id)
@@ -61,7 +76,7 @@ def obtener_detalle_rutina( rutina_id: int, servicio: RutinaServiceInterface = D
 
 
 # ------------------------------------ BUSCAR RUTINA POR NOMBRE ------------------------------------------------
-@router.get("/nombre/{nombre}", response_model=RutinaResponse, summary="Buscar una Rutina por su nombre", operation_id="Buscar_Rutina_por_Nombre")
+@router.get("/rutinas/nombre/{nombre}", response_model=RutinaResponse, summary="Buscar una Rutina por su nombre", operation_id="Buscar_Rutina_por_Nombre")
 def buscar_por_nombre( nombre: str, servicio: RutinaServiceInterface = Depends(get_rutina_service)) -> RutinaResponse:
     try:
         rutina = servicio.buscar_por_nombre(nombre)
@@ -75,7 +90,7 @@ def buscar_por_nombre( nombre: str, servicio: RutinaServiceInterface = Depends(g
 
 
 # ------------------------------------ MODIFICAR RUTINA --------------------------------------------------------
-@router.put("/{rutina_id}", response_model=RutinaResponse, summary="Modifica una rutina existente y sus ejercicios asociados", operation_id="Modificar_Rutina")
+@router.put("/rutinas/{rutina_id}", response_model=RutinaResponse, summary="Modifica una rutina existente y sus ejercicios asociados", operation_id="Modificar_Rutina")
 def modificar_rutina( rutina_id: int, data: RutinaModificarRequest, servicio: RutinaServiceInterface = Depends(get_rutina_service)):
     try:
         # Llamada al Caso de Uso/Servicio de Aplicación
@@ -93,7 +108,7 @@ def modificar_rutina( rutina_id: int, data: RutinaModificarRequest, servicio: Ru
 
 
 # ------------------------------------ DAR DE BAJA UNA RUTINA --------------------------------------------------
-@router.delete("/{rutina_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Elimina una rutina y todos sus ejercicios asociados", operation_id="Dar_Baja_Rutina")
+@router.delete("/rutinas/{rutina_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Elimina una rutina y todos sus ejercicios asociados", operation_id="Dar_Baja_Rutina")
 def dar_baja_rutina( rutina_id: int, rutina_service: RutinaServiceInterface = Depends(get_rutina_service)):
     try:
         # Llamada al Caso de Uso/Servicio de Aplicación

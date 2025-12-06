@@ -9,7 +9,7 @@ class RutinaConEjerciciosCreate(SQLModel):
     """DTO para crear una Rutina"""
     nombre: str = Field(..., max_length=100)
     descripcion: Optional[str] = Field(None, max_length=500)
-    ejercicios: List["EjercicioCreate"] # Referencia a DTOs
+    ejercicios: Optional[List["EjercicioCreate"]] = None # Referencia a los DTOs.
 
 
 class RutinaModificarRequest(SQLModel):
@@ -19,10 +19,10 @@ class RutinaModificarRequest(SQLModel):
     nombre: Optional[str] = Field(None, max_length=100)
     descripcion: Optional[str] = Field(None, max_length=500)
     # 1. Ejercicios a MODIFICAR o CREAR (si id es None)
-    ejercicios_a_modificar_o_crear: List["EjercicioUpdate"]
+    ejercicios_a_modificar_o_crear: Optional[List["EjercicioUpdate"]] = None
     
     # IDs de Ejercicios a ELIMINAR
-    ids_ejercicios_a_eliminar: List[int] = Field(
+    ids_ejercicios_a_eliminar: Optional[List[int]] = Field(
         default=[],
         description="Lista de IDs de ejercicios existentes que deben ser eliminados."
     )

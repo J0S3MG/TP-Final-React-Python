@@ -4,6 +4,8 @@ from Domain.Entities.ejercicio import Ejercicio
 from Domain.Exceptions.domain_exception import ValueError
 from Domain.Interfaces.rutina_service_interface import RutinaServiceInterface
 from Domain.Interfaces.rutina_repository_interface import RutinaRepositoryInterface
+from Domain.Interfaces.ejercicio_repository_interface import EjercicioRepositoryInterface
+from Application.DTOs.ejercicio_dto import EjercicioCreate, EjercicioUpdate
 from Application.DTOs.rutina_dto import RutinaConEjerciciosCreate, RutinaModificarRequest
 from Application.Exceptions.rutina_exception import RutinaAlreadyExistsError, RutinaNotFoundError
 
@@ -11,36 +13,43 @@ from Application.Exceptions.rutina_exception import RutinaAlreadyExistsError, Ru
 class RutinaService(RutinaServiceInterface):
     """Implementacion de la interfaz"""
 
-    def __init__(self, rutina_repository: RutinaRepositoryInterface):
+    def __init__(self, rutina_repository: RutinaRepositoryInterface, ejercicio_repository: EjercicioRepositoryInterface): 
         self.repository = rutina_repository
+        self.ejercicio_repository = ejercicio_repository # GUARDAR
 
     
     # ------------------------------------- ALTA RUTINA ---------------------------------------------------
     def alta_rutina(self, rutina_completa: RutinaConEjerciciosCreate) -> Rutina:
         """
-        Caso de Uso: Da de alta y persiste una nueva rutina y sus ejercicios.
+        Caso de Uso: Dar de alta y persiste una nueva rutina y sus ejercicios.
         """
-        # Validación de Regla de Negocio: Nombre Único.
-        if self.repository.buscar_por_nombre(rutina_completa.rutina.nombre): # Aca salta la excepcion en caso de no tener un nombre unico.
-            raise RutinaAlreadyExistsError(f"Ya existe una rutina con el nombre: {rutina_completa.rutina.nombre}")
+       # Validación de Regla de Negocio: Nombre Único.
+        if self.repository.get_by_nombre(rutina_completa.nombre):
+            raise RutinaAlreadyExistsError(
+                f"Ya existe una rutina con el nombre: {rutina_completa.nombre}"
+            )
+    
         # Mapeamos DTOs (Ejercicios) a Entidades de Dominio Puras.
         ejercicios_domain: List[Ejercicio] = []
-        for e_dto in rutina_completa.ejercicios:
-            ejercicios_domain.append(
-                Ejercicio(
-                    nombre=e_dto.nombre,
-                    dia_semana=e_dto.dia_semana,
-                    series=e_dto.series,
-                    repeticiones=e_dto.repeticiones,
-                    peso=e_dto.peso,
-                    notas=e_dto.notas,
-                    orden=e_dto.orden
+        # Solo procesar ejercicios si la lista existe y no está vacía.
+        if rutina_completa.ejercicios:  # Esto evalúa a False si es None o lista vacía.
+            for e_dto in rutina_completa.ejercicios:
+                ejercicios_domain.append(
+                    Ejercicio(
+                        nombre=e_dto.nombre,
+                        dia_semana=e_dto.dia_semana,
+                        series=e_dto.series,
+                        repeticiones=e_dto.repeticiones,
+                        peso=e_dto.peso,
+                        notas=e_dto.notas,
+                        orden=e_dto.orden
+                    )
                 )
-            )     
+    
         # Crear la Entidad Raíz del Agregado (Rutina).
         rutina_domain = Rutina(
-            nombre=rutina_completa.rutina.nombre,
-            descripcion=rutina_completa.rutina.descripcion,
+            nombre=rutina_completa.nombre,
+            descripcion=rutina_completa.descripcion,
             ejercicios=ejercicios_domain
         )
         # El Repositorio se encarga de traducir Rutina -> RutinaDB y guardar.
@@ -62,10 +71,7 @@ class RutinaService(RutinaServiceInterface):
         rutina = self.repository.get_by_id(rutina_id)
         if not rutina:
             raise RutinaNotFoundError(f"Rutina con ID {rutina_id} no encontrada.")
-        # El Dominio (la Entidad Rutina) ya tiene la lista de ejercicios.
-        # La agrupación por día es una preocupación de presentación/aplicación,
-        # no una regla de negocio del Dominio (pero se hace aquí para conveniencia).
-        return rutina # Devolvemos la Entidad de Dominio para que el Controlador haga el mapeo final
+        return rutina 
     # -----------------------------------------------------------------------------------------------------
 
 
@@ -76,6 +82,20 @@ class RutinaService(RutinaServiceInterface):
         if not rutina:
             raise RutinaNotFoundError(f"Rutina con Nombre {nombre} no encontrada.")
         return rutina 
+    # -----------------------------------------------------------------------------------------------------
+
+
+    # ------------------------------------ BUSQUEDA PARCIAL POR NOMBRE ------------------------------------
+    def buscar_rutinas_por_nombre(self, termino: str) -> List[Rutina]:
+        """
+        Caso de Uso: Búsqueda de rutinas.
+        Llama al repositorio y devuelve las Entidades de Dominio.
+        """
+        clean_termino = termino.strip()
+        if not clean_termino:
+            return []
+            
+        return self.repository.search_by_name(clean_termino)
     # -----------------------------------------------------------------------------------------------------
 
     
@@ -119,4 +139,50 @@ class RutinaService(RutinaServiceInterface):
             self.repository.delete_by_id(rutina_id)   
         except ValueError:
             raise RutinaNotFoundError(f"Rutina con ID {rutina_id} no encontrada para eliminar.")
+    # -----------------------------------------------------------------------------------------------------
+
+
+    # ------------------------------------ AGREGAR EJERCICIO ----------------------------------------------
+    def agregar_ejercicio_a_rutina(self, rutina_id: int, data: EjercicioCreate) -> Rutina:
+        """
+        Caso de Uso: Agrega un ejercicio individual a una rutina existente.
+        """
+        rutina = self.repository.get_by_id(rutina_id)
+        if not rutina:
+            raise RutinaNotFoundError(f"Rutina con ID {rutina_id} no encontrada.")
+
+        ejercicio_data = data.model_dump()
+        rutina.agregar_ejercicio(ejercicio_data)
+
+        return self.repository.save(rutina)
+    # -----------------------------------------------------------------------------------------------------
+
+    
+    # ------------------------------------ ACTUALIZAR EJERCICIO -------------------------------------------
+    def actualizar_ejercicio(self, ejercicio_id: int, data: EjercicioUpdate) -> Ejercicio:
+        """
+        Caso de Uso: Actualiza un ejercicio individual usando el nuevo EjercicioRepository.
+        """
+        ejercicio_data = data.model_dump(exclude_none=True)
+        
+        # DELEGAMOS al nuevo repositorio de ejercicio
+        ejercicio_actualizado = self.ejercicio_repository.update_by_id(ejercicio_id, ejercicio_data)
+        
+        if not ejercicio_actualizado:
+            raise RutinaNotFoundError(f"Ejercicio con ID {ejercicio_id} no encontrado para actualizar.")
+            
+        return ejercicio_actualizado
+    # -----------------------------------------------------------------------------------------------------
+    
+
+    # ------------------------------------ ELIMINAR EJERCICIO ---------------------------------------------
+    def eliminar_ejercicio(self, ejercicio_id: int):
+        """
+        Caso de Uso: Elimina un ejercicio individual usando el nuevo EjercicioRepository.
+        """
+        # DELEGAMOS al nuevo repositorio de ejercicio
+        eliminado = self.ejercicio_repository.delete_by_id(ejercicio_id)
+        
+        if not eliminado:
+            raise RutinaNotFoundError(f"Ejercicio con ID {ejercicio_id} no encontrado para eliminar.")
     # -----------------------------------------------------------------------------------------------------

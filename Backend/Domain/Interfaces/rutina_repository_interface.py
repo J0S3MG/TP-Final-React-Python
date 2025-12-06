@@ -25,6 +25,12 @@ class RutinaRepositoryInterface(ABC):
         """Busca una rutina por su nombre para la validación de unicidad."""
         pass
     
+
+    @abstractmethod
+    def search_by_name(self, termino: str) -> List[Rutina]:
+        """Busca rutinas por coincidencia parcial en el nombre, sin distinguir mayúsculas/minúsculas."""
+        pass
+    
     @abstractmethod
     def delete_by_id(self, rutina_id: int):
         """Elimina el Agregado Rutina completo por ID."""

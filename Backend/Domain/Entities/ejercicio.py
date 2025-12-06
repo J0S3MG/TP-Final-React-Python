@@ -20,5 +20,3 @@ class Ejercicio: # Creamos la entidad Ejercicio pura.
         self.notas = notas
         self.orden = orden
 
-    # Aquí iría la lógica de Dominio (e.g., calcular el volumen total del ejercicio)
-    # def calcular_volumen(self) -> int: ...

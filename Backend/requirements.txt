@@ -1,14 +1,9 @@
-# --- Framework principal ---
 fastapi
 uvicorn[standard]
-
-# --- ORM y base de datos ---
 sqlmodel
-psycopg2-binary  # Driver PostgreSQL precompilado (no requiere compilador C++)
-
-# --- Validación y modelos ---
+psycopg2-binary 
 pydantic
 pydantic-settings
-
-# --- Utilidades ---
-python-dotenv  # Cargar variables desde .env
+python-dotenv 
+python-jose[cryptography]
+passlib[bcrypt]

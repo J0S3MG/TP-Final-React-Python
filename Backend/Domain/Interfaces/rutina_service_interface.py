@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 from Domain.Entities.rutina import Rutina
+from Domain.Entities.ejercicio import Ejercicio
+from Application.DTOs.ejercicio_dto import EjercicioCreate, EjercicioUpdate
 from Application.DTOs.rutina_dto import RutinaConEjerciciosCreate, RutinaModificarRequest
 
 class RutinaServiceInterface(ABC):
@@ -27,6 +29,11 @@ class RutinaServiceInterface(ABC):
     def buscar_por_nombre(self, nombre: str) -> Optional[Rutina]:
         """Busca una rutina por su nombre para la validación de unicidad."""
         pass
+    
+    @abstractmethod
+    def buscar_rutinas_por_nombre(self, termino: str) -> List[Rutina]:
+        """Busca rutinas por coincidencia parcial en el nombre, sin distinguir mayúsculas/minúsculas."""
+        pass
 
     @abstractmethod
     def modificar_rutina(self, rutina_id: int, data: RutinaModificarRequest) -> Rutina:
@@ -36,5 +43,20 @@ class RutinaServiceInterface(ABC):
     @abstractmethod
     def dar_baja_rutina(self, rutina_id: int):
         """Elimina el Agregado Rutina completo por ID."""
+        pass
+
+    @abstractmethod
+    def agregar_ejercicio_a_rutina(self, rutina_id: int, data: EjercicioCreate) -> Rutina:
+        """Agrega un nuevo ejercicio a una rutina existente por ID."""
+        pass
+
+    @abstractmethod
+    def actualizar_ejercicio(self, ejercicio_id: int, data: EjercicioUpdate) -> Ejercicio:
+        """Actualiza un ejercicio existente por ID de Ejercicio."""
+        pass
+
+    @abstractmethod
+    def eliminar_ejercicio(self, ejercicio_id: int):
+        """Elimina un ejercicio existente por ID de Ejercicio."""
         pass
     
